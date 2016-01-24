@@ -24,7 +24,7 @@ random).
 Maybe could be interesting to split a **blob** into fixed size block and save the
 metadata as another tree, i.e., each file is encrypted, splitted into a certain number
 of blocks that are saved with the hash of its content and a tree file containing the
-ordered list of this blocks is generated.
+ordered list of this blocks is generated. Probably this splitting is overkilling.
 
 Also to take into account possible use of salting: prefix each encrypted block with
 a n-bits salt (probably is automatically handled by a sane crupto-library).

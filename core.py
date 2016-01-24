@@ -19,6 +19,18 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+ROOT_PATH = os.path.abspath(os.path.dirname(__file__))
+
+
+OBJ_DIRPATH = os.path.join(ROOT_PATH, '.ucloud')
+
+def path_obj(hashed):
+    return os.path.join(OBJ_DIRPATH, hashed)
+
+def write_obj(hashed, content):
+    destination_path = path_obj(hashed)
+    with open(destination_path, 'wb') as f:
+        f.write(content)
 
 def pkcs7(data):
     padder = padding.PKCS7(128).padder()
@@ -58,30 +70,20 @@ def handle_file(dirpath, filename):
     filepath = os.path.join(dirpath, filename)
     logger.debug('handle_file: %s' % filepath)
 
-    blocks = []
+    block_metadata = None
     with open(filepath, mode='rb') as f:
-        # loop over 256 bytes
-        while True:
-            plaintext = f.read(256)
+        plaintext = f.read()
 
-            if plaintext == b"": # you must confront with byte
-                logger.debug('EOF')
-                break
+        ciphertext = crypt_and_padd(plaintext)
+        hashed_ciphertext = hashme(ciphertext)
+        block_metadata = (hashed_ciphertext, ciphertext)
 
-            ciphertext = crypt_and_padd(plaintext)
-            hashed_ciphertext = hashme(ciphertext)
-            block_metadata = (hashed_ciphertext, ciphertext)
+    write_obj(hashed_ciphertext, ciphertext)
 
-            logger.debug('metadata block %d for file %s: %s' % (len(blocks), filepath, block_metadata))
-            blocks.append(block_metadata)
-
-    #import ipdb;ipdb.set_trace()
-    metadata = filename + '\n' + '\n'.join(map(operator.itemgetter(0), blocks))
-
-    logger.debug('metadata for all the blocks for file %s: %s' % (filename, metadata))
+    logger.debug('metadata block for file %s: %s' % (filepath, block_metadata))
 
     # not quite accurate answer https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
-    return hashme(metadata.encode('utf-8'))
+    return hashme(block_metadata[0].encode('utf-8'))
 
 
 if __name__ == '__main__':
@@ -96,6 +98,8 @@ if __name__ == '__main__':
             blocks_metadata = handle_file(dirpath, filename)
             hashed_filenames.append(blocks_metadata)
 
-        dir_metatadata = '\n'.join(hashed_filenames)
+        dir_metadata = '\n'.join(hashed_filenames)
 
-        logger.debug('\nmetatadata:\n%s' % dir_metatadata)
+        logger.debug('\nmetatadata for directory %s:\n%s' % (dirpath, dir_metadata))
+        dir_ciphertext = crypt_and_padd(dir_metadata.encode('utf-8'))
+        write_obj(hashme(dir_ciphertext), dir_ciphertext)
