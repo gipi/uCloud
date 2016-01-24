@@ -53,7 +53,7 @@ class FileSystem(object):
                 blocks_metadata = self.handle_file(dirpath, filename)
                 hashed_filenames.append(blocks_metadata)
 
-            dir_metadata = '\n'.join(hashed_filenames)
+            dir_metadata = '\n'.join(hashed_filenames)+ ' ' + filename + '\n'
 
             logger.debug('\nmetatadata for directory %s:\n%s' % (dirpath, dir_metadata))
             dir_ciphertext = self.crypto.crypt_and_padd(dir_metadata.encode('utf-8'))
