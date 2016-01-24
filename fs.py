@@ -38,7 +38,7 @@ class FileSystem(object):
         logger.debug('metadata block for file %s: %s' % (filepath, block_metadata))
 
         # not quite accurate answer https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
-        return self.crypto.hashme(block_metadata[0].encode('utf-8'))
+        return hashed_ciphertext
 
     def analyze(self, wd=None):
         wd = wd or os.getcwd()
